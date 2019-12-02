@@ -4,7 +4,8 @@
 
 # Getting utility modules
 try :
-  from  UserInterface.Display import *
+  from UserInterface.Display import *
+  from Board.Board import *
 except ImportError as err :
   print("ImportationError occured at main.py: %s "%(err))
 
@@ -15,6 +16,9 @@ done = False
 UI.DrawChessBoard()
 pygame.display.init()
 while not done:
+  for event in pygame.event.get():
+    if event.type == QUIT:
+      done = True
   UI.DrawChessBoard()
   pygame.display.update()
 

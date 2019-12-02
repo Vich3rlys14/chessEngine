@@ -27,7 +27,7 @@ chessTable[7] = listcopy( order )
 chessTable[6] = ["p" for _ in range (8)]
 chessTable[1]  = listcopy(chessTable[6])
 
-#for x in range(8) : print(chessTable[x], x )
+
 
 """ Games rules implemenation."""
 # Algebric notation translation to position
