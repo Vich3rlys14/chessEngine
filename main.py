@@ -2,13 +2,29 @@
 #-*-coding : utf-8 -*-
 #author : vicherlys
 
+# Getting utility modules
+try :
+  from  UserInterface.Display import *
+except ImportError as err :
+  print("ImportationError occured at main.py: %s "%(err))
+
+
 """Chess Engine AI"""
+
+UI = Interface()
+
+done = False 
+UI.DrawChessBoard()
+pygame.display.init()
+while not done:
+  UI.DrawChessBoard()
+  pygame.display.update()
+
 
 listcopy = lambda x: [ n for n in x]
 # Table representation.
 
 """
-
 chess board representaiton
  ----------------
 |r n b q k b n r |0 black side
@@ -32,8 +48,7 @@ chessTable[7] = listcopy( order )
 chessTable[6] = ["p" for _ in range (8)]
 chessTable[1]  = listcopy(chessTable[6])
 
-
-for x in range(8) : print(chessTable[x], x )
+#for x in range(8) : print(chessTable[x], x )
 
 """ Games rules implemenation."""
 # Algebric notation translation to position
@@ -42,9 +57,6 @@ def translate_pos(pos):
     x= ["a","b","c","d","e","f","g","h"].index(pos[0])
     return [ int(pos[1])-1 , x] 
   else : raise Exception
-
-inp = input("Enter position")
-pos= translate_pos(inp)
 
 def getTablePosContent(pos):
   return chessTable[pos[0]][pos[1]]
