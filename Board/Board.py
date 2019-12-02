@@ -22,10 +22,10 @@ pions = ["p", "r","b" , "k" , "q" , "n"]
 order =  ["r", "n", "b", "q", "k", "b", "n" , "r" ]
 
 # Chess board initialisation.
-chessTable[0] = listcopy( order )
+chessTable[0] = [ i.capitalize() for i in order ]
 chessTable[7] = listcopy( order )
 chessTable[6] = ["p" for _ in range (8)]
-chessTable[1]  = listcopy(chessTable[6])
+chessTable[1]  = ["P" for _ in range (8)]
 
 
 

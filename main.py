@@ -20,7 +20,6 @@ while not done:
     if event.type == QUIT:
       done = True
   UI.DrawChessBoard()
+  UI.DrawPieces(chessTable)
   pygame.display.update()
-
-
 
