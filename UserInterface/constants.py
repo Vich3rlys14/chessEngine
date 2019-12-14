@@ -1,6 +1,9 @@
 import pygame
+
+case_size = 50#px
+
 # Colors
-black = 0x33333
+black = 0x333333
 white = 0xffffff
 #Pieces
 wpawn = pygame.image.load("./Sprites/whitePawn.png")

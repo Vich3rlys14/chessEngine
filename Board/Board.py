@@ -17,20 +17,21 @@ chess board representation
 
 """
 
-chessTable = [["" for x in range(8)] for x in range(8)]
+chessBoard = [["" for x in range(8)] for x in range(8)]
 
 pions = ["p","r","b","k","q","n"]
 order = ["r","n","b","q","k","b","n","r" ]
 
 # Chess board initialisation.
-chessTable[0] = [ i.capitalize() for i in order ]
-chessTable[7] = listcopy( order )
-chessTable[6] = ["p" for _ in range (8)]
-chessTable[1]  = ["P" for _ in range (8)]
+chessBoard[0] = [ i.capitalize() for i in order ]
+chessBoard[7] = listcopy( order )
+chessBoard[6] = ["p" for _ in range (8)]
+chessBoard[1]  = ["P" for _ in range (8)]
 
 
 """ Games rules implemenation."""
-# Algebric notation translation to position
+# coordinate translation to position notation
+# position notation translation to coordinate
 def translate_pos(pos):
   if pos != "" and len(pos) == 2:# make a regex later for checking this
     x= ["a","b","c","d","e","f","g","h"].index(pos[0])
@@ -38,15 +39,15 @@ def translate_pos(pos):
   else : raise Exception
 
 def getTablePosContent(pos):
-  return chessTable[pos[0]][pos[1]]
+  return chessBoard[pos[0]][pos[1]]
 
 def setTablePosContent(pos , elt):
-  chessTable[pos[0]][pos[1]] = elt
+  chessBoard[pos[0]][pos[1]] = elt
   return True
 
+def checkmove( newpos ):
+	pass	
+
 # Choice Making algorithm.
-def move(chessTable,start,dest):
+def move(chessBoard,start,dest):
   pass
-
-# User Interface.
-

@@ -21,6 +21,15 @@ class Interface ():
         case = pygame.Surface((self.case_size , self.case_size))
         case.fill(case_color(col))
         self.screen.blit(case, (x*self.case_size , y*self.case_size))
+  
+  def DrawPieceDrag(self,piece,pos):
+    
+    img = pieces[piece.lower()]
+    img = img[1] if piece.isupper() else img[0]
+
+    pos = (pos[0]-self.case_size/2,pos[1]-self.case_size/2)
+    self.screen.blit( img,pos)
+		
 
   def DrawPieces(self,board):
     for x in range(len(board)):
