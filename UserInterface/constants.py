@@ -5,6 +5,7 @@ case_size = 50#px
 # Colors
 black = 0x333333
 white = 0xffffff
+covercolor = 0xfafa00
 #Pieces
 wpawn = pygame.image.load("./Sprites/whitePawn.png")
 bpawn = pygame.image.load("./Sprites/blackPawn.png")

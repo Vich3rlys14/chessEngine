@@ -22,12 +22,18 @@ class Interface ():
         case.fill(case_color(col))
         self.screen.blit(case, (x*self.case_size , y*self.case_size))
   
-  def DrawPieceDrag(self,piece,pos):
+  def DrawPieceDrag(self,piece , dragStart ,pos):
     
     img = pieces[piece.lower()]
     img = img[1] if piece.isupper() else img[0]
+		
+    startcase = pygame.Surface((self.case_size , self.case_size))
+    startcase.fill(covercolor)
 
     pos = (pos[0]-self.case_size/2,pos[1]-self.case_size/2)
+    startpos = ( dragStart[1]*self.case_size , dragStart[0]*self.case_size)
+
+    self.screen.blit (startcase ,startpos)
     self.screen.blit( img,pos)
 		
 
@@ -42,4 +48,5 @@ class Interface ():
           elif  board[x][y] == p.capitalize():
             image= images[1]
           if image != "":
-            self.screen.blit(image , (y*self.case_size , x*self.case_size))     
+            self.screen.blit(image , (y*self.case_size , x*self.case_size))
+	    

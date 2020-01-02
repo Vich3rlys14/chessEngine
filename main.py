@@ -14,32 +14,44 @@ except ImportError as err :
 
 
 UI = Interface()
-lock = False #Locking the screen position of a dragged piece
+draglock = False #Locking the screen position of a dragged piece
 draggedPiece = None
+startdrag=None
 tablePos = lambda pos : (math.floor(pos[1]/case_size), math.floor(pos[0]/case_size))
+
 
 """ Drag and Drop implementation"""
 def dropPiece(position):
-	global draggedPiece,lock
-	lock = False
-	setTablePosContent( tablePos(position), draggedPiece)
-	print ("A {} was dropped at case :{} ...".format(draggedPiece,tablePos(position)))
+	global draggedPiece,draglock,startdrag
+	draglock = False
+	for row in chessBoard:
+		print (row)
+	if (isLegalMove(chessBoard,startdrag,tablePos(position))):
+		makemove( startdrag , tablePos(position) , draggedPiece)
+
+		
+
+	print ("A {} was dropped at case :{} ,it is illegal".format(draggedPiece,tablePos(position)))
 
 
 def dragPiece(mousePos) :
-	global lock,draggedPiece
-	if lock == True:
-		UI.DrawPieceDrag(draggedPiece,mousePos)
-
+	global draglock,draggedPiece,startdrag
+	if draglock == True:
+			
+		UI.DrawPieceDrag(draggedPiece ,startdrag ,mousePos)
 	else:
 		mpos = tablePos(mousePos)
+		print(mpos)
 		draggedPiece = getTablePosContent(mpos)
-		if (-1 != getTablePosContent(mpos) != ""):
-			setTablePosContent(mpos, -1)
-			lock = True
+		if ( getTablePosContent(mpos) != ""):
+			startdrag = mpos
+			draglock = True
 	return True
 
+
+
 UI.DrawChessBoard()
+
 pygame.display.init()
 
 gameover= False
@@ -53,13 +65,15 @@ while not gameover:
 			gameover=True
 		elif event.type == MOUSEMOTION:
 			mouse = pygame.mouse.get_pos()
+
 			if pygame.mouse.get_pressed()[0] :
 				dragPiece(mouse)
 
-	if pygame.mouse.get_pressed()[0] !=1 and lock == True :
+	if pygame.mouse.get_pressed()[0] !=1 and draglock == True :
+		print("drop position ",mouse)
 		dropPiece(mouse)
 
-	elif pygame.mouse.get_pressed()[0] and lock==True:
+	elif pygame.mouse.get_pressed()[0] and draglock==True:
 		dragPiece(pygame.mouse.get_pos())
 
 	pygame.display.update()
