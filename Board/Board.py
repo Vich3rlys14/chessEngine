@@ -85,8 +85,8 @@ def setTablePosContent(pos , elt):
   chessBoard[pos[0]][pos[1]] = elt
   return True
 
-def isLegalMove( chessBoard,start,dest ):
-	global turn , positions,currentPosIndex
+def isLegalMove( start,dest ):
+	global chessBoard, turn , positions,currentPosIndex
 	isLegal = False
 
 	print (len(positions) )	
@@ -128,11 +128,10 @@ def isLegalMove( chessBoard,start,dest ):
 				#allowing to take ennemies
 				if  target != "" and ptype.isupper() != target.isupper():
 					legal_moves.append(p)
-				#taking by side pass (prise en passant)
-				
+				#taking by side pass (prise en passant)	
 				sp = start + Pos([0,i])
 				target =  getTablePosContent(sp , positions[currentPosIndex])
-				if target.casefold() == "p"and ptype.isuper() != target.isupper():
+				if target.casefold() == "p"and ptype.isupper() != target.isupper():
 					if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
 						legal_moves.append(p) 
 				

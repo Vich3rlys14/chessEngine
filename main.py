@@ -26,7 +26,7 @@ def dropPiece(position):
 	draglock = False
 	for row in chessBoard:
 		print (row)
-	if (isLegalMove(chessBoard,startdrag,tablePos(position))):
+	if (isLegalMove( startdrag,tablePos(position))):
 		makemove( startdrag , tablePos(position) , draggedPiece)
 
 		
