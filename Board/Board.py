@@ -1,5 +1,6 @@
 from Board.Position import Pos
 
+
 listcopy = lambda x: [ n for n in x]
 copyboard = lambda board : [ listcopy(line) for line in board]
 
@@ -62,12 +63,10 @@ def makemove(startdrag , destination , draggedPiece):
 	""" Making move function"""
 	global chessBoard , positions, currentPosIndex
 	print ("A {} was dropped at case :{} ,it is a legal move".format(draggedPiece,destination))
-	setTablePosContent( destination, draggedPiece)	
+	setTablePosContent( destination, draggedPiece)
 	setTablePosContent( startdrag , "")
 	positions.append(copyboard(chessBoard))
 	currentPosIndex += 1
-	
-
 
 """ position notation translation to coordinate"""
 def translate_pos(pos):
@@ -85,64 +84,134 @@ def setTablePosContent(pos , elt):
   chessBoard[pos[0]][pos[1]] = elt
   return True
 
+def pawnMoves (start):
+	""" List all allowed moves for a pawns """
+	global  turn , positions,currentPosIndex
+	legal_moves = []
+	ptype  = False if turn < 0 else True
+
+	if start.y == 1 or start.y==6:
+		# Two steps for first move
+		for i in range (2):
+			position = start+Pos([(i+1)*turn , 0])
+			print("position = {}".format(position))
+			try:
+				if ( getTablePosContent(position) == ""):
+					legal_moves.append(position)
+			except IndexError:
+				continue
+	else:
+		# normal pawn moves
+		movePos = start+Pos([turn,0])
+		try:
+			if getTablePosContent(movePos) == "":
+				legal_moves.append(movePos)
+		except IndexError:
+			pass
+
+	for i in [-1,1]:
+		try:
+			p = start +Pos([turn,i])				
+			target =  getTablePosContent(p , positions[currentPosIndex])
+
+			#allowing to take ennemies
+			if  target != "" and ptype != target.isupper():
+				legal_moves.append(p)
+
+			#taking by side pass (prise en passant)
+			sp = start + Pos([0,i])
+			target =  getTablePosContent(sp , positions[currentPosIndex])
+			if target.casefold() == "p"and ptype != target.isupper():
+				if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
+					legal_moves.append(p) 
+				
+		except IndexError :
+			continue
+	return legal_moves
+
+
+def kingMoves(start):
+	""""""
+	global  turn, positions,currentPosIndex
+	directions = [-1,0,1]
+	king  = getTablePosContent(start.pos())
+	moves = list()
+	
+
+
+	for x in directions:
+		for y in directions:
+			if not x == y == 0 :
+				move = ( start+ Pos([y,x]))
+				try:
+					dest = getTablePosContent(move)
+					if isEnnemy(king , dest ) or dest == "" :
+						moves.append(move)
+				except IndexError:
+					continue
+	return moves
+
+
+def rookMoves(start):
+	""""""
+	global  turn, positions, currentPosIndex
+	
+	pass
+
+def queenMoves(start):
+	""""""
+	global  turn, positions, currentPosIndex
+
+	pass
+
+def bishopMoves(start):
+	""""""
+	global  turn, positions, currentPosIndex
+
+	pass
+
+def knightMoves(start):
+	""""""
+	global  turn, positions, currentPosIndex
+
+	pass
+
+
 def isLegalMove( start,dest ):
 	global chessBoard, turn , positions,currentPosIndex
 	isLegal = False
 
-	print (len(positions) )	
 	ptype = getTablePosContent(start , positions[currentPosIndex] )
-
-	print( "this should'nt output -1 : the output-> ", ptype)
 
 	legal_moves = []
 	start = Pos(start)
 
+	if not (turn > 0) == ptype.isupper():
+		print(isLegal)
+		return isLegal
 
 	if start == dest: return False
 
 	# implementation of pawns deplacement
 	if ptype.casefold() == "p": # if is a pawn
-		if start.y == 1 or start.y==6:
-			# Two steps for first move
-			for i in range (2):
-				position = start+Pos([(i+1)*turn , 0])
-				print("position = {}".format(position))
-				try:
-					if ( getTablePosContent(position) == ""):
-						legal_moves.append(position)
-				except IndexError:
-					continue
-		else:
-			# normal pawn moves
-			movePos = start+Pos([turn,0])
-			try:
-				if getTablePosContent(movePos) == "":
-					legal_moves.append(movePos)
-			except IndexError:
-				pass
-		
-		for i in [-1,1]:
-			try:
-				p = start +Pos([turn,i])				
-				target =  getTablePosContent(p , positions[currentPosIndex])
-				#allowing to take ennemies
-				if  target != "" and ptype.isupper() != target.isupper():
-					legal_moves.append(p)
-				#taking by side pass (prise en passant)	
-				sp = start + Pos([0,i])
-				target =  getTablePosContent(sp , positions[currentPosIndex])
-				if target.casefold() == "p"and ptype.isupper() != target.isupper():
-					if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
-						legal_moves.append(p) 
-				
-			except IndexError :
-				continue
-		
+		legal_moves = pawnMoves(start)
+	
+	elif ptype.casefold() == "k":
+		legal_moves = kingMoves(start)
+
+	elif ptype.casefold() == "b":
+		pass
+	elif ptype.casefold() == "n":
+		pass
+	elif ptype.casefold() == "q":
+		pass
+	elif ptype.casefold() == "r":
+		pass
 			
 
-		print(legal_moves)
-		if dest in legal_moves:
-			isLegal = True
-			turn = turn*-1
+	print(legal_moves)
+	if dest in legal_moves:
+		isLegal = True
+		turn = turn*-1
 
 	return isLegal
