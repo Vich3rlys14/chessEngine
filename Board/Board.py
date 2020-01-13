@@ -97,7 +97,8 @@ def pawnMoves (start):
 			print("position = {}".format(position))
 			try:
 				if ( getTablePosContent(position) == ""):
-					legal_moves.append(position)
+					#legal_moves.append(position)
+					yield position
 			except IndexError:
 				continue
 	else:
@@ -105,7 +106,8 @@ def pawnMoves (start):
 		movePos = start+Pos([turn,0])
 		try:
 			if getTablePosContent(movePos) == "":
-				legal_moves.append(movePos)
+				#legal_moves.append(movePos)
+				yield movePos
 		except IndexError:
 			pass
 
@@ -116,14 +118,16 @@ def pawnMoves (start):
 
 			#allowing to take ennemies
 			if  target != "" and ptype != target.isupper():
-				legal_moves.append(p)
+				#legal_moves.append(p)
+				yield p
 
 			#taking by side pass (prise en passant)
 			sp = start + Pos([0,i])
 			target =  getTablePosContent(sp , positions[currentPosIndex])
 			if target.casefold() == "p"and ptype != target.isupper():
 				if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
-					legal_moves.append(p) 
+					#legal_moves.append(p) 
+					yield p
 				
 		except IndexError :
 			continue
@@ -153,10 +157,37 @@ def kingMoves(start):
 
 
 def rookMoves(start):
-	""""""
-	global  turn, positions, currentPosIndex
 	
-	pass
+	global  turn, positions, currentPosIndex
+	d = [-1,1]
+	for i in range(4):
+		x,y =  0,0
+		v = d[i%2]
+
+		if i < 2 : x = v
+		else :  y = v
+		
+		direction = Pos([y,x])
+		
+		dirNextCase = start+ direction
+		followDir = True
+		while dirNextCase != None and followDir:
+			caseContent = getTablePosContent(dirNextCase)
+			currentPiece = getTablePosContent([start.y,start.x])
+			if caseContent == "":
+				yield dirNextCase
+			elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+				followDir = False
+				yield dirNextCase
+			
+			
+			elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+				followDir = False
+
+			else:
+				followDir = False
+			dirNextCase = Pos(dirNextCase)+ direction
+
 
 def queenMoves(start):
 	""""""
@@ -194,7 +225,7 @@ def isLegalMove( start,dest ):
 
 	# implementation of pawns deplacement
 	if ptype.casefold() == "p": # if is a pawn
-		legal_moves = pawnMoves(start)
+		if dest in pawnMoves(start): legal_moves.append(dest)
 	
 	elif ptype.casefold() == "k":
 		legal_moves = kingMoves(start)
@@ -206,7 +237,7 @@ def isLegalMove( start,dest ):
 	elif ptype.casefold() == "q":
 		pass
 	elif ptype.casefold() == "r":
-		pass
+		if dest in rookMoves(start) : legal_moves.append(dest)
 			
 
 	print(legal_moves)

@@ -29,8 +29,6 @@ def dropPiece(position):
 	if (isLegalMove( startdrag,tablePos(position))):
 		makemove( startdrag , tablePos(position) , draggedPiece)
 
-		
-
 	print ("A {} was dropped at case :{} ,it is illegal".format(draggedPiece,tablePos(position)))
 
 
