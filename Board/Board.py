@@ -249,8 +249,39 @@ def bishopMoves(start):
 def knightMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
+	d = [-1,1]
 
-	pass
+	def checkPosition(pos):
+		if pos == None:
+			return False
+		p = getTablePosContent(pos)
+		if p != "":
+			if isEnnemy(getTablePosContent([start.y,start.x]) , p) :
+				return True
+			else:
+				return False
+		else :
+			return True
+		
+	for i in range(4):
+		x,y =  0,0
+		v = d[i%2]*2
+
+		if i < 2 :
+			x = v
+			for n in d:
+				y = n
+				movePos = start + Pos([y,x])
+				if checkPosition(movePos):
+					yield movePos
+
+		else :
+			y = v
+			for n in d:
+				x = n
+				movePos = start + Pos([y,x])
+				if checkPosition(movePos):
+					yield movePos
 
 
 def isLegalMove( start,dest ):
@@ -279,7 +310,7 @@ def isLegalMove( start,dest ):
 		if dest in bishopMoves(start): legal_moves.append(dest)
 
 	elif ptype.casefold() == "n":
-		pass
+		if dest in knightMoves(start): legal_moves.append(dest)
 
 	elif ptype.casefold() == "q":
 		if dest in queenMoves(start): legal_moves.append(dest)
