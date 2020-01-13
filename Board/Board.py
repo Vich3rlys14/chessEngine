@@ -180,7 +180,6 @@ def rookMoves(start):
 				followDir = False
 				yield dirNextCase
 			
-			
 			elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
 				followDir = False
 
@@ -192,14 +191,60 @@ def rookMoves(start):
 def queenMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
+		
+	d = [-1,0,1]
+	for x in d:
+		for y in d:
+			if not x == y == 0:
+				direction = Pos([y,x])
+		
+				dirNextCase = start+ direction
+				followDir = True
+				while dirNextCase != None and followDir:
+					caseContent = getTablePosContent(dirNextCase)
+					currentPiece = getTablePosContent([start.y,start.x])
+					if caseContent == "":
+						yield dirNextCase
+					elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+						followDir = False
+						yield dirNextCase
+			
+					elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+						followDir = False
 
-	pass
+					else:
+						followDir = False
+					dirNextCase = Pos(dirNextCase)+ direction
+
 
 def bishopMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
+	
+	d = [-1,1]
+	for x in d:
+		for y in d:
+			direction = Pos([y,x])
+			dirNextCase = start+direction
+			
+			followDir = True
+			while dirNextCase != None and followDir:
+				caseContent = getTablePosContent(dirNextCase)
+				currentPiece = getTablePosContent([start.y,start.x])
+				if caseContent == "":
+					yield dirNextCase
+				elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+					followDir = False
+					yield dirNextCase
+			
+				elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+					followDir = False
 
-	pass
+				else:
+					followDir = False
+				dirNextCase = Pos(dirNextCase)+ direction
+
+	
 
 def knightMoves(start):
 	""""""
@@ -231,11 +276,14 @@ def isLegalMove( start,dest ):
 		legal_moves = kingMoves(start)
 
 	elif ptype.casefold() == "b":
-		pass
+		if dest in bishopMoves(start): legal_moves.append(dest)
+
 	elif ptype.casefold() == "n":
 		pass
+
 	elif ptype.casefold() == "q":
-		pass
+		if dest in queenMoves(start): legal_moves.append(dest)
+
 	elif ptype.casefold() == "r":
 		if dest in rookMoves(start) : legal_moves.append(dest)
 			
