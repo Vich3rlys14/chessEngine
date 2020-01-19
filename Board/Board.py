@@ -42,7 +42,11 @@ chessBoard[1] = ["P" for _ in range (8)]
 
 turn = -1 # it is the value for white , 1 for black . first turn white 
 moves = list()
-isEnnemy = lambda a,b: a.isupper() != b.isupper()
+
+isEnnemy  = lambda target: target.isupper() != (turn>0)
+# The following variables track the positions of both sides kings
+blackKing , whiteKing = [0,4] , [7,4]
+
 
 """
 Games rules implemenation.
@@ -87,7 +91,6 @@ def setTablePosContent(pos , elt):
 def pawnMoves (start):
 	""" List all allowed moves for a pawns """
 	global  turn , positions,currentPosIndex
-	legal_moves = []
 	ptype  = False if turn < 0 else True
 
 	if start.y == 1 or start.y==6:
@@ -131,7 +134,6 @@ def pawnMoves (start):
 				
 		except IndexError :
 			continue
-	return legal_moves
 
 
 def kingMoves(start):
@@ -141,16 +143,15 @@ def kingMoves(start):
 	king  = getTablePosContent(start.pos())
 	moves = list()
 	
-
-
 	for x in directions:
 		for y in directions:
 			if not x == y == 0 :
 				move = ( start+ Pos([y,x]))
 				try:
 					dest = getTablePosContent(move)
-					if isEnnemy(king , dest ) or dest == "" :
+					if isEnnemy(dest ) or dest == "" :
 						moves.append(move)
+						
 				except IndexError:
 					continue
 	return moves
@@ -166,9 +167,9 @@ def rookMoves(start):
 
 		if i < 2 : x = v
 		else :  y = v
-		
+
 		direction = Pos([y,x])
-		
+
 		dirNextCase = start+ direction
 		followDir = True
 		while dirNextCase != None and followDir:
@@ -176,11 +177,11 @@ def rookMoves(start):
 			currentPiece = getTablePosContent([start.y,start.x])
 			if caseContent == "":
 				yield dirNextCase
-			elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+			elif caseContent != "" and isEnnemy(caseContent)   :
 				followDir = False
 				yield dirNextCase
 			
-			elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+			elif caseContent != "" and not (isEnnemy(caseContent)):
 				followDir = False
 
 			else:
@@ -191,7 +192,7 @@ def rookMoves(start):
 def queenMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
-		
+
 	d = [-1,0,1]
 	for x in d:
 		for y in d:
@@ -205,11 +206,11 @@ def queenMoves(start):
 					currentPiece = getTablePosContent([start.y,start.x])
 					if caseContent == "":
 						yield dirNextCase
-					elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+					elif caseContent != "" and isEnnemy(caseContent)   :
 						followDir = False
 						yield dirNextCase
 			
-					elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+					elif caseContent != "" and not (isEnnemy(caseContent)):
 						followDir = False
 
 					else:
@@ -220,24 +221,23 @@ def queenMoves(start):
 def bishopMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
-	
+
 	d = [-1,1]
 	for x in d:
 		for y in d:
 			direction = Pos([y,x])
-			dirNextCase = start+direction
-			
+			dirNextCase = start+direction	
 			followDir = True
 			while dirNextCase != None and followDir:
 				caseContent = getTablePosContent(dirNextCase)
 				currentPiece = getTablePosContent([start.y,start.x])
 				if caseContent == "":
 					yield dirNextCase
-				elif caseContent != "" and isEnnemy(currentPiece,caseContent)   :
+				elif caseContent != "" and isEnnemy(caseContent)   :
 					followDir = False
 					yield dirNextCase
 			
-				elif caseContent != "" and not (isEnnemy(currentPiece,caseContent)):
+				elif caseContent != "" and not (isEnnemy(caseContent)):
 					followDir = False
 
 				else:
@@ -247,31 +247,33 @@ def bishopMoves(start):
 	
 
 def knightMoves(start):
-	""""""
-	global  turn, positions, currentPosIndex
-	d = [-1,1]
-
 	def checkPosition(pos):
 		if pos == None:
 			return False
 		p = getTablePosContent(pos)
 		if p != "":
-			if isEnnemy(getTablePosContent([start.y,start.x]) , p) :
+			if isEnnemy(p) :
 				return True
 			else:
 				return False
 		else :
 			return True
-		
+
+	""""""
+	global  turn, positions, currentPosIndex
+	d = [-1,1]
+
 	for i in range(4):
 		x,y =  0,0
 		v = d[i%2]*2
 
 		if i < 2 :
 			x = v
+
 			for n in d:
 				y = n
 				movePos = start + Pos([y,x])
+
 				if checkPosition(movePos):
 					yield movePos
 
@@ -284,6 +286,58 @@ def knightMoves(start):
 					yield movePos
 
 
+def kingChecks(kingPos):
+	""" This method , generate all positions from where
+			the current king is checked , in the position taken
+	"""
+	# kingPos is a [y,x] position,translate to Pos instance
+	kPos = Pos(kingPos)
+	#current king's color , (lowercase:white , uppercase: black)
+	king = 'k' if turn < 0 else 'K'
+	check_position = []
+
+	# case where the king is checked by a queen
+	for position in queenMoves(kPos):
+		positionContent = getTablePosContent(position)
+		if positionContent.casefold() == "q" and isEnnemy(positionContent):
+				check_position.append(position)
+	
+	# case where the king is checked by a bishop
+	for position in bishopMoves(kPos):
+		posContent = getTablePosContent(position)
+		if posContent.casefold() == "b" and isEnnemy(posContent):
+			check_position.append( position)
+
+	# case where the king is checked by a bishop
+	for position in knightMoves(kPos):
+		posContent = getTablePosContent(position)
+		if posContent.casefold() == "n" and isEnnemy(posContent):
+			check_position.append( position)
+
+
+	# case where the king is checked by a rook
+	for position in rookMoves(kPos):
+		posContent = getTablePosContent(position)
+		if posContent.casefold() == "r" and isEnnemy(posContent):
+			check_position.append( position)
+	
+	
+	# for pawns moves , king is checked only if
+	# the pawn can take the king
+	for d in [1,-1]:
+		position = kPos+Pos([1,d])
+		try:
+			posContent = getTablePosContent(position)
+			if isEnnemy (posContent) and posContent.casefold() == "p":
+				check_position.append(position)
+		except IndexError :
+			continue
+	
+	return check_position	
+
+# kingIsChecked function ... that check checks :3 
+kingIsChecked= lambda position: len(kingChecks(position)) > 0
+
 def isLegalMove( start,dest ):
 	global chessBoard, turn , positions,currentPosIndex
 	isLegal = False
@@ -294,7 +348,6 @@ def isLegalMove( start,dest ):
 	start = Pos(start)
 
 	if not (turn > 0) == ptype.isupper():
-		print(isLegal)
 		return isLegal
 
 	if start == dest: return False
@@ -305,6 +358,8 @@ def isLegalMove( start,dest ):
 	
 	elif ptype.casefold() == "k":
 		legal_moves = kingMoves(start)
+		if  kingIsChecked(dest):
+			return False
 
 	elif ptype.casefold() == "b":
 		if dest in bishopMoves(start): legal_moves.append(dest)
@@ -317,9 +372,7 @@ def isLegalMove( start,dest ):
 
 	elif ptype.casefold() == "r":
 		if dest in rookMoves(start) : legal_moves.append(dest)
-			
-
-	print(legal_moves)
+					
 	if dest in legal_moves:
 		isLegal = True
 		turn = turn*-1
