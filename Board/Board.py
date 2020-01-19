@@ -344,6 +344,11 @@ def kingChecks(kingPos):
 # kingIsChecked function ... that check checks :3 
 kingIsChecked= lambda position: len(kingChecks(position)) > 0
 
+def isCastle(start , dest):
+	pass
+def priseEnPassant(start , dest):
+	pass
+
 def isLegalMove( start,dest ):
 	global chessBoard, turn , positions,currentPosIndex
 	isLegal = False
@@ -386,13 +391,12 @@ def isLegalMove( start,dest ):
 	currentking = whiteKing if turn < 0 else blackKing
 	
 	if isLegal:
-		if ptype.casefold != "k":
+		if ptype.casefold() != "k":
 			# if the piece is pinned it can't move
 			setTablePosContent(start.pos() , "")
 			destCntnt = getTablePosContent(dest)
 			setTablePosContent(dest , ptype)
-		
-			print("currentking:",currentking)
+	
 			if kingIsChecked(currentking):
 				isLegal= False
 			setTablePosContent(start.pos(),ptype)
