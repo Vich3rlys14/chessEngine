@@ -24,13 +24,16 @@ tablePos = lambda pos : (math.floor(pos[1]/case_size), math.floor(pos[0]/case_si
 def dropPiece(position):
 	global draggedPiece,draglock,startdrag
 	draglock = False
-	for row in chessBoard:
-		print (row)
-	if (isLegalMove( startdrag,tablePos(position))):
-		makemove( startdrag , tablePos(position) , draggedPiece)
+	pos = tablePos(position)
 
-	print ("A {} was dropped at case :{} ,it is illegal".format(draggedPiece,tablePos(position)))
+	if isLegalMove( startdrag, pos ):
+		makemove( startdrag , pos , draggedPiece)
+	
+	elif isCastle(startdrag, pos, draggedPiece):
+		castle(pos)
 
+	if priseEnPassant(startdrag,pos , draggedPiece):
+		prise( startdrag, pos, draggedPiece )
 
 def dragPiece(mousePos) :
 	global draglock,draggedPiece,startdrag
@@ -39,7 +42,7 @@ def dragPiece(mousePos) :
 		UI.DrawPieceDrag(draggedPiece ,startdrag ,mousePos)
 	else:
 		mpos = tablePos(mousePos)
-		print(mpos)
+
 		draggedPiece = getTablePosContent(mpos)
 		if ( getTablePosContent(mpos) != ""):
 			startdrag = mpos
@@ -68,7 +71,6 @@ while not gameover:
 				dragPiece(mouse)
 
 	if pygame.mouse.get_pressed()[0] !=1 and draglock == True :
-		print("drop position ",mouse)
 		dropPiece(mouse)
 
 	elif pygame.mouse.get_pressed()[0] and draglock==True:

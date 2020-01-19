@@ -3,10 +3,6 @@ from Board.Position import Pos
 listcopy = lambda x: [ n for n in x]
 copyboard = lambda board : [ listcopy(line) for line in board]
 
-def printBoard(board):
-	""" Debugging function """
-	for line in board:
-		print (line)
 
 # Table representation.
 """
@@ -46,7 +42,6 @@ isEnnemy  = lambda target: target.isupper() != (turn>0)
 # The following variables track the positions of both sides kings
 blackKing , whiteKing = [0,4] , [7,4]
 
-
 """
 Games rules implemenation.
 """
@@ -60,19 +55,18 @@ movesList = []
 positions.append( copyboard(chessBoard) ) # Append initial position
 currentPosIndex = 0
 
-print(positions)
-
 def makemove(startdrag , destination , draggedPiece):
 	""" Making move function"""
-	global chessBoard , positions, currentPosIndex
-	print ("A {} was dropped at case :{} ,it is a legal move".format(draggedPiece,destination))
+	global chessBoard , positions, currentPosIndex,turn
 	setTablePosContent( destination, draggedPiece)
 	setTablePosContent( startdrag , "")
 	positions.append(copyboard(chessBoard))
 	currentPosIndex += 1
+	turn=turn*-1
 
-""" position notation translation to coordinate"""
+
 def translate_pos(pos):
+  """ position notation translation to coordinate"""
   if len(pos) == 2:# check with a regex the correct format
     x= "abcdefgh".index(pos[1])
     return [int(pos[0])-1 , x] 
@@ -92,7 +86,7 @@ def setKingPos( king , pos):
 	if king < 0:
 		whiteKing = pos
 	else:
-		blackKIng = pos
+		blackKing = pos
 
 def pawnMoves (start):
 	""" List all allowed moves for a pawns """
@@ -103,7 +97,6 @@ def pawnMoves (start):
 		# Two steps for first move
 		for i in range (2):
 			position = start+Pos([(i+1)*turn , 0])
-			print("position = {}".format(position))
 			try:
 				if ( getTablePosContent(position) == ""):
 					#legal_moves.append(position)
@@ -129,14 +122,6 @@ def pawnMoves (start):
 			if  target != "" and ptype != target.isupper():
 				#legal_moves.append(p)
 				yield p
-
-			#taking by side pass (prise en passant)
-			sp = start + Pos([0,i])
-			target =  getTablePosContent(sp , positions[currentPosIndex])
-			if target.casefold() == "p"and ptype != target.isupper():
-				if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
-					#legal_moves.append(p) 
-					yield p
 				
 		except IndexError :
 			continue
@@ -344,10 +329,52 @@ def kingChecks(kingPos):
 # kingIsChecked function ... that check checks :3 
 kingIsChecked= lambda position: len(kingChecks(position)) > 0
 
-def isCastle(start , dest):
-	pass
-def priseEnPassant(start , dest):
-	pass
+def isCastle(start , dest , king):
+	""" allow castling """
+	return False
+
+def priseEnPassant(start , dest , pawn):
+	""""""
+
+	global currentPosIndex,positions
+	moves = []
+	start = Pos(start)
+	
+	if pawn.casefold() != "p":
+		return False
+
+	for i in [-1,1]:
+		try:
+			sp = start + Pos([0,i])
+
+			target =  getTablePosContent(sp , positions[currentPosIndex])
+			if target.casefold() == "p" and isEnnemy(target):
+				if getTablePosContent( start+ Pos([turn*2 , i]) , positions[currentPosIndex-1]) == target:
+					moves.append( start + Pos([turn , i]) )
+		except IndexError:
+			continue
+	
+	if dest in moves:
+		return True
+	return False
+
+def prise( start , dest , pawn):
+	makemove(start , dest , pawn)
+	setTablePosContent( Pos(dest)+Pos([turn, 0]) , "")
+
+def isPinned ( piece  , position  , dest):
+	pinned = False
+	setTablePosContent(position.pos() , "")
+	destCntnt = getTablePosContent(dest)
+	setTablePosContent(dest , piece)
+
+	currentking = whiteKing if turn < 0 else blackKing
+	if kingIsChecked(currentking):
+		pinned = True
+
+	setTablePosContent(position.pos(),piece)
+	setTablePosContent(dest , destCntnt)
+	return pinned
 
 def isLegalMove( start,dest ):
 	global chessBoard, turn , positions,currentPosIndex
@@ -388,28 +415,17 @@ def isLegalMove( start,dest ):
 	if dest in legal_moves:
 		isLegal = True
 			
-	currentking = whiteKing if turn < 0 else blackKing
 	
 	if isLegal:
-		if ptype.casefold() != "k":
+		if ptype.casefold() != "k" :
 			# if the piece is pinned it can't move
-			setTablePosContent(start.pos() , "")
-			destCntnt = getTablePosContent(dest)
-			setTablePosContent(dest , ptype)
-	
-			if kingIsChecked(currentking):
-				isLegal= False
-			setTablePosContent(start.pos(),ptype)
-			setTablePosContent(dest , destCntnt)
+			if isPinned(ptype , start , dest):
+				isLegal = False
 
 		else:
 			setKingPos(turn , dest)
 	
 
 	#everything is okey , switch turn
-		
-	if isLegal : turn = turn*-1
-	print("whiteking :",whiteKing,"\n blackKing :", blackKing);
-	 
 
 	return isLegal
