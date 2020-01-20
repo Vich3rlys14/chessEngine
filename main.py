@@ -30,7 +30,7 @@ def dropPiece(position):
 		makemove( startdrag , pos , draggedPiece)
 	
 	elif isCastle(startdrag, pos, draggedPiece):
-		castle(pos)
+		castle(pos,draggedPiece)
 
 	if priseEnPassant(startdrag,pos , draggedPiece):
 		prise( startdrag, pos, draggedPiece )

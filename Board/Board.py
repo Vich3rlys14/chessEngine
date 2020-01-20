@@ -29,6 +29,7 @@ chessBoard = [["" for x in range(8)] for x in range(8)]
 pions = ["p","r","b","k","q","n"]
 order = ["r","n","b","q","k","b","n","r" ]
 
+
 # Chess board initialisation.
 chessBoard[0] = [ i.capitalize() for i in order ]
 chessBoard[7] = listcopy( order )
@@ -41,6 +42,7 @@ moves = list()
 isEnnemy  = lambda target: target.isupper() != (turn>0)
 # The following variables track the positions of both sides kings
 blackKing , whiteKing = [0,4] , [7,4]
+blackCastled = whiteCastled = False 
 
 """
 Games rules implemenation.
@@ -68,8 +70,8 @@ def makemove(startdrag , destination , draggedPiece):
 def translate_pos(pos):
   """ position notation translation to coordinate"""
   if len(pos) == 2:# check with a regex the correct format
-    x= "abcdefgh".index(pos[1])
-    return [int(pos[0])-1 , x] 
+    x= "abcdefgh".index(pos[0])
+    return [ 8-int(pos[1]) , x] 
   else : raise Exception
 
 def getTablePosContent(pos, board=chessBoard):
@@ -285,8 +287,16 @@ def kingChecks(kingPos):
 	# kingPos is a [y,x] position,translate to Pos instance
 	kPos = Pos(kingPos)
 	#current king's color , (lowercase:white , uppercase: black)
-	king = 'k' if turn < 0 else 'K'
+	if turn < 0 :
+		king = 'k'
+		rkingpos = whiteKing
+		setTablePosContent(whiteKing, '')
+	else :
+		king = 'K'
+		setTablePosContent(blackKing, '')
+		rkingpos = blackKing
 	check_position = []
+	
 
 	# case where the king is checked by a queen
 	for position in queenMoves(kPos):
@@ -323,7 +333,7 @@ def kingChecks(kingPos):
 				check_position.append(position)
 		except IndexError :
 			continue
-	
+	setTablePosContent(rkingpos , king)
 	return check_position	
 
 # kingIsChecked function ... that check checks :3 
@@ -331,6 +341,114 @@ kingIsChecked= lambda position: len(kingChecks(position)) > 0
 
 def isCastle(start , dest , king):
 	""" allow castling """
+	
+	if king.casefold() != "k":
+		return False 
+	
+	if turn>0:
+		if blackCastled : return False
+		king = Pos(blackKing)                  # e8
+		kingsideRook  = Pos(translate_pos("a8"))  # a8 --> [0,0]
+		queensideRook = Pos(translate_pos("h8"))  # h8 --> [0,7]
+	else :
+		if whiteCastled : return False
+		king = Pos(whiteKing)                     # e1
+		kingsideRook  = Pos(translate_pos("h1"))  # h1 --> [7,7]
+		queensideRook = Pos(translate_pos("a1"))  # a1 --> [7,0]
+	
+	distK = ((kingsideRook.x - king.x)//2)*-1
+	distQ = ((queensideRook.x - king.x)//2)*-1
+
+
+	if dest == kingsideRook.pos() or dest == (kingsideRook.y, kingsideRook.x+distK ):
+		for boardIndex in range(len(positions)):
+			boardKing = getTablePosContent(king.pos() , positions[len(positions)-(boardIndex+1)])
+			boardRook = getTablePosContent (kingsideRook.pos() , positions[len(positions)-(boardIndex+1)])
+			if boardKing.casefold() != 'k' or boardRook.casefold() != 'r':
+				return False
+
+		if kingsideRook.x > king.x :
+			sign  = 1
+			space = 2
+		else :
+			sign = -1
+			space= 3
+		
+		for i in range(space ):
+			pos = king+ Pos([0,(i+1)*sign])
+			if getTablePosContent(pos) != "" :
+				return False
+
+			# if the 2 first cases  from king is intercepted by an ennemy , 
+			# king can not castle
+			if i<2:
+				if kingIsChecked(pos):
+					return False
+
+		
+	
+		
+	elif dest == queensideRook.pos() or dest == (queensideRook.y, queensideRook.x+distQ):
+		for boardIndex in range (len(positions)):
+			boardKing = getTablePosContent(king.pos() , positions[len(positions)-(boardIndex+1)])
+			boardRook = getTablePosContent (queensideRook.pos() , positions[len(positions)-(boardIndex+1)])
+			if boardKing.casefold() != 'k' or boardRook.casefold() != 'r':
+				return False 
+
+		if queensideRook.x > king.x :
+			sign  = 1
+			space = 2
+		else :
+			sign = -1
+			space= 3
+		
+		for i in range(space ):
+			pos = king+ Pos([0,(i+1)*sign])
+			if getTablePosContent(pos) != "":
+				return False
+			if i<2:
+				if kingIsChecked (pos):
+					return False	
+		
+		
+	else :
+		return False
+	
+	return True
+
+def castle(position, currentKing):
+	"""castle the king"""
+	global turn,currentPosIndex,positions,whiteCastled , blackCastled
+	king = whiteKing if turn <0 else blackKing
+	kingpos = Pos(king)
+	x,y = kingpos.x ,str( 8-kingpos.y )
+	if position[1] > x :
+		rook = getTablePosContent( translate_pos("h"+y))
+		setTablePosContent( translate_pos("e"+y) , "")
+		setTablePosContent( translate_pos("h"+y) , "")
+		setTablePosContent( translate_pos("f"+y) , rook)
+		setTablePosContent( translate_pos("g"+y) , currentKing )
+		king= translate_pos("g"+y)
+	else :
+		rook = getTablePosContent( translate_pos("a"+y))
+		setTablePosContent( translate_pos("e"+y) , "")
+		setTablePosContent( translate_pos("a"+y) , "")
+		setTablePosContent( translate_pos("d"+y) , rook)
+		setTablePosContent( translate_pos("c"+y) , currentKing )
+		king = translate_pos("c"+y)
+	
+	if turn < 0:
+		whiteKing[0],whiteKing[1]=king[0],king[1]
+		whiteCastled = True
+	else :
+		blackKing[0],blackKing[1] = king[0],king[1]	
+		blackCastled = True
+	positions.append(copyboard(chessBoard))
+	currentPosIndex += 1
+	turn=turn*-1
+
+
+def checkmate():
 	return False
 
 def priseEnPassant(start , dest , pawn):
@@ -414,18 +532,14 @@ def isLegalMove( start,dest ):
 	
 	if dest in legal_moves:
 		isLegal = True
-			
+		
 	
+	# if the piece is pinned it can't move
 	if isLegal:
-		if ptype.casefold() != "k" :
-			# if the piece is pinned it can't move
+		if ptype.casefold() != "k":
 			if isPinned(ptype , start , dest):
 				isLegal = False
-
 		else:
 			setKingPos(turn , dest)
 	
-
-	#everything is okey , switch turn
-
 	return isLegal
