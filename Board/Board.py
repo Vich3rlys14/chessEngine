@@ -29,7 +29,6 @@ chessBoard = [["" for x in range(8)] for x in range(8)]
 pions = ["p","r","b","k","q","n"]
 order = ["r","n","b","q","k","b","n","r" ]
 
-
 # Chess board initialisation.
 chessBoard[0] = [ i.capitalize() for i in order ]
 chessBoard[7] = listcopy( order )
@@ -40,9 +39,12 @@ turn = -1 # it is the value for white , 1 for black . first turn white
 moves = list()
 
 isEnnemy  = lambda target: target.isupper() != (turn>0)
+rightTurnColor = lambda piece: piece.isupper() == (turn>0)
+
 # The following variables track the positions of both sides kings
 blackKing , whiteKing = [0,4] , [7,4]
 blackCastled = whiteCastled = False 
+currentKing = lambda : whiteKing if turn < 0 else blackKing
 
 """
 Games rules implemenation.
@@ -65,7 +67,6 @@ def makemove(startdrag , destination , draggedPiece):
 	positions.append(copyboard(chessBoard))
 	currentPosIndex += 1
 	turn=turn*-1
-
 
 def translate_pos(pos):
   """ position notation translation to coordinate"""
@@ -185,7 +186,6 @@ def rookMoves(start):
 def queenMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
-
 	d = [-1,0,1]
 	for x in d:
 		for y in d:
@@ -214,7 +214,6 @@ def queenMoves(start):
 def bishopMoves(start):
 	""""""
 	global  turn, positions, currentPosIndex
-
 	d = [-1,1]
 	for x in d:
 		for y in d:
@@ -238,22 +237,19 @@ def bishopMoves(start):
 				dirNextCase = Pos(dirNextCase)+ direction
 
 	
-
-def knightMoves(start):
-	def checkPosition(pos):
-		#checking if the knight can go to this position
-		if pos == None:
-			return False
-		p = getTablePosContent(pos)
-		if p != "":
-			if isEnnemy(p) :
-				return True
-			else:
-				return False
-		else :
+def checkPosition(pos):
+	if pos == None:
+		return False
+	p = getTablePosContent(pos)
+	if p != "":
+		if isEnnemy(p) :
 			return True
+		else:
+			return False
+	else :
+		return True
 
-	""""""
+def knightMoves(start):	
 	global  turn, positions, currentPosIndex
 	d = [-1,1]
 
@@ -277,7 +273,7 @@ def knightMoves(start):
 				x = n
 				movePos = start + Pos([y,x])
 				if checkPosition(movePos):
-					yield movePos
+					yield movePos		
 
 
 def kingChecks(kingPos):
@@ -297,20 +293,14 @@ def kingChecks(kingPos):
 		rkingpos = blackKing
 	check_position = []
 	
-
-	# case where the king is checked by a queen
-	for position in queenMoves(kPos):
-		positionContent = getTablePosContent(position)
-		if positionContent.casefold() == "q" and isEnnemy(positionContent):
-				check_position.append(position)
 	
 	# case where the king is checked by a bishop
 	for position in bishopMoves(kPos):
 		posContent = getTablePosContent(position)
-		if posContent.casefold() == "b" and isEnnemy(posContent):
+		if posContent.casefold() == "b" or posContent.casefold() == "q"  and isEnnemy(posContent):
 			check_position.append( position)
 
-	# case where the king is checked by a bishop
+	# case where the king is checked by a knight
 	for position in knightMoves(kPos):
 		posContent = getTablePosContent(position)
 		if posContent.casefold() == "n" and isEnnemy(posContent):
@@ -320,7 +310,7 @@ def kingChecks(kingPos):
 	# case where the king is checked by a rook
 	for position in rookMoves(kPos):
 		posContent = getTablePosContent(position)
-		if posContent.casefold() == "r" and isEnnemy(posContent):
+		if posContent.casefold() == "r" or posContent.casefold() == "q" and isEnnemy(posContent):
 			check_position.append( position)
 
 	# for pawns moves , king is checked only if
@@ -356,8 +346,8 @@ def isCastle(start , dest , king):
 		kingsideRook  = Pos(translate_pos("h1"))  # h1 --> [7,7]
 		queensideRook = Pos(translate_pos("a1"))  # a1 --> [7,0]
 	
-	distK = ((kingsideRook.x - king.x)//2)*-1
-	distQ = ((queensideRook.x - king.x)//2)*-1
+	distK = ((kingsideRook.x - king.x)//2)*-1  # distance between the king and King-side rook
+	distQ = ((queensideRook.x - king.x)//2)*-1 # distance between the king and Queen-side rook
 
 
 	if dest == kingsideRook.pos() or dest == (kingsideRook.y, kingsideRook.x+distK ):
@@ -371,8 +361,8 @@ def isCastle(start , dest , king):
 			sign  = 1
 			space = 2
 		else :
-			sign = -1
-			space= 3
+			sign  = -1
+			space = 3
 		
 		for i in range(space ):
 			pos = king+ Pos([0,(i+1)*sign])
@@ -384,10 +374,7 @@ def isCastle(start , dest , king):
 			if i<2:
 				if kingIsChecked(pos):
 					return False
-
-		
 	
-		
 	elif dest == queensideRook.pos() or dest == (queensideRook.y, queensideRook.x+distQ):
 		for boardIndex in range (len(positions)):
 			boardKing = getTablePosContent(king.pos() , positions[len(positions)-(boardIndex+1)])
@@ -443,17 +430,56 @@ def castle(position, currentKing):
 	else :
 		blackKing[0],blackKing[1] = king[0],king[1]	
 		blackCastled = True
+
 	positions.append(copyboard(chessBoard))
 	currentPosIndex += 1
 	turn=turn*-1
 
 
-def checkmate():
-	return False
+def piecesMoves(p , pos ):
 
+	p = p.casefold()
+
+	if p == "p":
+		return pawnMoves(pos)
+	elif p == "b":
+		return bishopMoves(pos)
+	elif p == "r":
+		return rookMoves(pos)
+	elif p == "n":
+		return knightMoves(pos)
+	elif p == "q":
+		return queenMoves(pos)
+	elif p == "k":
+		for move in kingMoves(pos):
+			if not kingIsChecked(move):
+				yield move
+	else :
+		return [] # returning an empty list of moves.
+
+def checkmate(board):
+	global currentPosIndex
+	
+	check = kingIsChecked(currentKing())	
+	for y, row  in enumerate(board):
+		for x, piece in enumerate(row):
+			if rightTurnColor(piece  ) and piece != "":
+				for move in piecesMoves(piece , Pos([y,x])   ):
+					if not isPinned( piece , Pos([y,x]), move ):
+						print (piece)
+				
+						print (move)
+						return False
+	if check:
+		return True   # checkmate
+	else :
+		return None   # pat 
+
+def nullByMaterial (boar):
+	pass
+	
 def priseEnPassant(start , dest , pawn):
 	""""""
-
 	global currentPosIndex,positions
 	moves = []
 	start = Pos(start)
@@ -494,13 +520,13 @@ def isPinned ( piece  , position  , dest):
 	setTablePosContent(dest , destCntnt)
 	return pinned
 
+
 def isLegalMove( start,dest ):
 	global chessBoard, turn , positions,currentPosIndex
 	isLegal = False
 
 	ptype = getTablePosContent(start , positions[currentPosIndex] )
 
-	legal_moves = []
 	start = Pos(start)
 
 	if not (turn > 0) == ptype.isupper():
@@ -509,29 +535,26 @@ def isLegalMove( start,dest ):
 	if start == dest: return False
 
 	# implementation of pawns deplacement
-	if ptype.casefold() == "p": # if is a pawn
-		if dest in pawnMoves(start): legal_moves.append(dest)
+	if ptype.casefold() == "p" and  dest in pawnMoves(start):
+		isLegal = True
 	
-	elif ptype.casefold() == "k":
-		legal_moves = kingMoves(start)
+	elif ptype.casefold() == "k" and dest in kingMoves(start):
 		if  kingIsChecked(dest):
 			return False
-
-	elif ptype.casefold() == "b":
-		if dest in bishopMoves(start): legal_moves.append(dest)
-
-	elif ptype.casefold() == "n":
-		if dest in knightMoves(start): legal_moves.append(dest)
-
-	elif ptype.casefold() == "q":
-		if dest in queenMoves(start): legal_moves.append(dest)
-
-	elif ptype.casefold() == "r":
-		if dest in rookMoves(start) : legal_moves.append(dest)
-
-	
-	if dest in legal_moves:
 		isLegal = True
+
+	elif ptype.casefold() == "b" and dest in bishopMoves(start):
+		isLegal = True
+
+	elif ptype.casefold() == "n" and dest in knightMoves(start):
+		isLegal = True
+
+	elif ptype.casefold() == "q" and dest in queenMoves(start):
+		isLegal = True
+
+	elif ptype.casefold() == "r" and dest in rookMoves(start) :
+		isLegal = True
+	
 		
 	
 	# if the piece is pinned it can't move

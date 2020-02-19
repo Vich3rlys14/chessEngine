@@ -6,6 +6,7 @@
 
 try :
 	import math
+	import time
 	from UserInterface.Display import *
 	from Board.Board import *
 
@@ -19,21 +20,30 @@ draggedPiece = None
 startdrag=None
 tablePos = lambda pos : (math.floor(pos[1]/case_size), math.floor(pos[0]/case_size))
 
-
 """ Drag and Drop implementation"""
 def dropPiece(position):
-	global draggedPiece,draglock,startdrag
+	global draggedPiece,draglock,startdrag, gameover
 	draglock = False
 	pos = tablePos(position)
-
 	if isLegalMove( startdrag, pos ):
 		makemove( startdrag , pos , draggedPiece)
 	
 	elif isCastle(startdrag, pos, draggedPiece):
 		castle(pos,draggedPiece)
 
-	if priseEnPassant(startdrag,pos , draggedPiece):
+	elif priseEnPassant(startdrag,pos , draggedPiece):
 		prise( startdrag, pos, draggedPiece )
+	
+	mate= checkmate(chessBoard)
+
+	if mate == True:
+		print ("checkMate !!!")
+
+	elif mate == None:
+		print (" nulle par pat !!!")
+		
+		
+
 
 def dragPiece(mousePos) :
 	global draglock,draggedPiece,startdrag
@@ -62,6 +72,7 @@ while not gameover:
 	UI.DrawPieces(chessBoard)
 
 	for event in pygame.event.get():
+
 		if event.type == QUIT:
 			gameover=True
 		elif event.type == MOUSEMOTION:

@@ -9,6 +9,10 @@ class Interface ():
     self.height = self.width = self.case_size*8
     self.screen = pygame.display.set_mode((self.width, self.height))
     pygame.display.init()
+	
+  def reverseChessBoard():
+    """ Reversing chessboard for pvp mode """
+    return True
 
   def DrawChessBoard(self):
     case_color = lambda x : black if x == -1 else white
@@ -23,7 +27,7 @@ class Interface ():
         self.screen.blit(case, (x*self.case_size , y*self.case_size))
   
   def DrawPieceDrag(self,piece , dragStart ,pos):
-    
+ 
     img = pieces[piece.lower()]
     img = img[1] if piece.isupper() else img[0]
 		
