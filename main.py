@@ -25,6 +25,7 @@ def dropPiece(position):
 	global draggedPiece,draglock,startdrag, gameover
 	draglock = False
 	pos = tablePos(position)
+
 	if isLegalMove( startdrag, pos ):
 		makemove( startdrag , pos , draggedPiece)
 	

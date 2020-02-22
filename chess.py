@@ -1,95 +1,4 @@
-from Board.Position import Pos
-
-listcopy = lambda x: [ n for n in x]
-copyboard = lambda board : [ listcopy(line) for line in board]
-
-
-# Table representation.
-"""
-chess board representation
-
-blacks : uppercase
-whites  : lowercase
-
- ----------------
-|R N B Q K B N R |0 black side
-|P P P P P P P P |1
-|                |2
-|                |3
-|                |4
-|                |5
-|p p p p p p p p |6
-|r n b q k b n r |7 white side
- ----------------
-
-"""
-
-chessBoard = [["" for x in range(8)] for x in range(8)]
-
-pions = ["p","r","b","k","q","n"]
-order = ["r","n","b","q","k","b","n","r" ]
-
-# Chess board initialisation.
-chessBoard[0] = [ i.capitalize() for i in order ]
-chessBoard[7] = listcopy( order )
-chessBoard[6] = ["p" for _ in range (8)]
-chessBoard[1] = ["P" for _ in range (8)]
-
-turn = -1 # it is the value for white , 1 for black . first turn white
-moves = list()
-
-isEnnemy  = lambda target: target.isupper() != (turn>0)
-rightTurnColor = lambda piece: piece.isupper() == (turn>0)
-
-# The following variables track the positions of both sides kings
-blackKing , whiteKing = [0,4] , [7,4]
-blackCastled = whiteCastled = False 
-currentKing = lambda : whiteKing if turn < 0 else blackKing
-
-"""
-Games rules implemenation.
-"""
-
-""" coordinate translation to position notation"""
-coordToNote = lambda pos:"abcdefgh"[pos[1]-1]+str(8-pos[0])
-
-positions= []
-movesList = []
-
-positions.append( copyboard(chessBoard) ) # Append initial position
-currentPosIndex = 0
-
-def makemove(startdrag , destination , draggedPiece):
-	""" Making move function"""
-	global chessBoard , positions, currentPosIndex,turn
-	setTablePosContent( destination, draggedPiece)
-	setTablePosContent( startdrag , "")
-	positions.append(copyboard(chessBoard))
-	currentPosIndex += 1
-	turn=turn*-1
-
-def translate_pos(pos):
-  """ position notation translation to coordinate"""
-  if len(pos) == 2:# check with a regex the correct format
-    x= "abcdefgh".index(pos[0])
-    return [ 8-int(pos[1]) , x] 
-  else : raise Exception
-
-def getTablePosContent(pos, board=chessBoard):
-	if (pos != None):
-		return board[pos[0]][pos[1]]
-	raise IndexError
-
-def setTablePosContent(pos , elt):
-  chessBoard[pos[0]][pos[1]] = elt
-  return True
-
-def setKingPos( king , pos):
-	global blackKing , whiteKing
-	if king < 0:
-		whiteKing = pos
-	else:
-		blackKing = pos
+from Board.Board import *
 
 def pawnMoves (start):
 	""" List all allowed moves for a pawns """
@@ -240,13 +149,14 @@ def bishopMoves(start):
 def checkPosition(pos):
 	if pos == None:
 		return False
-
 	p = getTablePosContent(pos)
-
 	if p != "":
-		if not isEnnemy(p) :
+		if isEnnemy(p) :
+			return True
+		else:
 			return False
-	return True
+	else :
+		return True
 
 def knightMoves(start):	
 	global  turn, positions, currentPosIndex
@@ -255,11 +165,14 @@ def knightMoves(start):
 	for i in range(4):
 		x,y =  0,0
 		v = d[i%2]*2
+
 		if i < 2 :
 			x = v
+
 			for n in d:
 				y = n
 				movePos = start + Pos([y,x])
+
 				if checkPosition(movePos):
 					yield movePos
 
@@ -437,20 +350,15 @@ def piecesMoves(p , pos ):
 	p = p.casefold()
 
 	if p == "p":
-		for m in  pawnMoves(pos):
-			yield m
+		return pawnMoves(pos)
 	elif p == "b":
-		for m in  bishopMoves(pos):
-			yield m
+		return bishopMoves(pos)
 	elif p == "r":
-		for m in rookMoves(pos):
-			yield m
+		return rookMoves(pos)
 	elif p == "n":
-		for m in knightMoves(pos):
-			yield m
+		return knightMoves(pos)
 	elif p == "q":
-		for m in  queenMoves(pos):
-			yield m 
+		return queenMoves(pos)
 	elif p == "k":
 		for move in kingMoves(pos):
 			if not kingIsChecked(move):
@@ -462,21 +370,24 @@ def checkmate(board):
 	global currentPosIndex
 	
 	check = kingIsChecked(currentKing())
-	pinned = True
+	if not check :
+		return False	
 	for y, row  in enumerate(board):
 		for x, piece in enumerate(row):
-			if rightTurnColor(piece ) and piece != "":
+			if rightTurnColor(piece  ) and piece != "":
 				for move in piecesMoves(piece , Pos([y,x])   ):
 					if not isPinned( piece , Pos([y,x]), move ):
 						return False
-	
-	if check  :
+	if check:
 		return True   # checkmate
-	
-	return None # pat 
-	
+	else :
+		return None   # pat 
 
-def nullByMaterial (boar):
+def nullByMaterial (board):
+	""" 
+		 if there is only kings or only 1 bishop and / or 1 knight
+	"""
+
 	pass
 	
 def priseEnPassant(start , dest , pawn):
@@ -507,6 +418,7 @@ def prise( start , dest , pawn):
 	makemove(start , dest , pawn)
 	setTablePosContent( Pos(dest)+Pos([turn, 0]) , "")
 
+
 def isPinned ( piece  , position  , dest):
 	pinned = False
 	setTablePosContent(position.pos() , "")
@@ -522,48 +434,3 @@ def isPinned ( piece  , position  , dest):
 	return pinned
 
 
-def isLegalMove( start,dest ):
-	global chessBoard, turn , positions,currentPosIndex
-	isLegal = False
-
-	ptype = getTablePosContent(start , positions[currentPosIndex] )
-
-	start = Pos(start)
-
-	if not (turn > 0) == ptype.isupper():
-		return isLegal
-
-	if start == dest: return False
-
-	# implementation of pawns deplacement
-	if ptype.casefold() == "p" and  dest in pawnMoves(start):
-		isLegal = True
-	
-	elif ptype.casefold() == "k" and dest in kingMoves(start):
-		if  kingIsChecked(dest):
-			return False
-		isLegal = True
-
-	elif ptype.casefold() == "b" and dest in bishopMoves(start):
-		isLegal = True
-
-	elif ptype.casefold() == "n" and dest in knightMoves(start):
-		isLegal = True
-
-	elif ptype.casefold() == "q" and dest in queenMoves(start):
-		isLegal = True
-
-	elif ptype.casefold() == "r" and dest in rookMoves(start) :
-		isLegal = True
-	
-		
-	
-	# if the piece is pinned it can't move
-	if isLegal:
-		if ptype.casefold() != "k":
-			if isPinned(ptype , start , dest):
-				isLegal = False
-		else:
-			setKingPos(turn , dest)
-	
-	return isLegal
