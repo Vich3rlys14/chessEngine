@@ -1,5 +1,4 @@
 class Pos():
-
 	""" class Pos for position handling"""
 	def __init__(self,pos):
 		self.x , self.y= pos[1] , pos[0]

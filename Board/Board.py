@@ -1,8 +1,8 @@
+import re
 from Board.Position import Pos
 
 listcopy = lambda x: [ n for n in x]
 copyboard = lambda board : [ listcopy(line) for line in board]
-
 
 # Table representation.
 """
@@ -23,7 +23,6 @@ whites  : lowercase
  ----------------
 
 """
-
 chessBoard = [["" for x in range(8)] for x in range(8)]
 
 pions = ["p","r","b","k","q","n"]
@@ -54,17 +53,37 @@ Games rules implemenation.
 coordToNote = lambda pos:"abcdefgh"[pos[1]-1]+str(8-pos[0])
 
 positions= []
-movesList = []
+pgnRecord = []
+
+currentPosIndex = 0
 
 positions.append( copyboard(chessBoard) ) # Append initial position
-currentPosIndex = 0
+
+def getBoardRepresentation( chessBoard):
+	res =""
+	for row in chessBoard:
+		for case in row:
+			if case == '':
+				res += ' '
+			else:
+				res += case;
+		res+= '/'
+
+	matchs = re.finditer(r' +' , res)
+	for match in matchs:
+		res =res.replace(match.group()  , str(len(match.group())))
+	res = res[:-1]
+
+	return res
+
 
 def makemove(startdrag , destination , draggedPiece):
 	""" Making move function"""
-	global chessBoard , positions, currentPosIndex,turn
+	global chessBoard , positions, currentPosIndex,turn 
 	setTablePosContent( destination, draggedPiece)
 	setTablePosContent( startdrag , "")
 	positions.append(copyboard(chessBoard))
+
 	currentPosIndex += 1
 	turn=turn*-1
 
@@ -466,7 +485,7 @@ def checkmate(board):
 	for y, row  in enumerate(board):
 		for x, piece in enumerate(row):
 			if rightTurnColor(piece ) and piece != "":
-				for move in piecesMoves(piece , Pos([y,x])   ):
+				for move in piecesMoves(piece , Pos([y,x]) ):
 					if not isPinned( piece , Pos([y,x]), move ):
 						return False
 	
@@ -478,7 +497,7 @@ def checkmate(board):
 
 def nullByMaterial (boar):
 	pass
-	
+
 def priseEnPassant(start , dest , pawn):
 	""""""
 	global currentPosIndex,positions
@@ -539,10 +558,7 @@ def isLegalMove( start,dest ):
 	if ptype.casefold() == "p" and  dest in pawnMoves(start):
 		isLegal = True
 	
-	elif ptype.casefold() == "k" and dest in kingMoves(start):
-		if  kingIsChecked(dest):
-			return False
-		isLegal = True
+	
 
 	elif ptype.casefold() == "b" and dest in bishopMoves(start):
 		isLegal = True
@@ -550,10 +566,15 @@ def isLegalMove( start,dest ):
 	elif ptype.casefold() == "n" and dest in knightMoves(start):
 		isLegal = True
 
+	elif ptype.casefold() == "r" and dest in rookMoves(start) :
+		isLegal = True
+
 	elif ptype.casefold() == "q" and dest in queenMoves(start):
 		isLegal = True
 
-	elif ptype.casefold() == "r" and dest in rookMoves(start) :
+	elif ptype.casefold() == "k" and dest in kingMoves(start):
+		if  kingIsChecked(dest):
+			return False
 		isLegal = True
 	
 		

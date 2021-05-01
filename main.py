@@ -40,10 +40,11 @@ def dropPiece(position):
 	if mate == True:
 		print ("checkMate !!!")
 
-	elif mate == None:
+	elif mate == None: 
 		print (" nulle par pat !!!")
-		
-		
+	
+	# lack of material
+
 
 
 def dragPiece(mousePos) :
@@ -61,7 +62,6 @@ def dragPiece(mousePos) :
 	return True
 
 
-
 UI.DrawChessBoard()
 
 pygame.display.init()
@@ -71,6 +71,7 @@ gameover= False
 while not gameover:
 	UI.DrawChessBoard()
 	UI.DrawPieces(chessBoard)
+	#UI.DrawPositionsBrowse()
 
 	for event in pygame.event.get():
 
